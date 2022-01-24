@@ -48,7 +48,8 @@ while (!done) {
 }
 
 activities <- rbind_pages(activity_list) %>% 
-  filter(device_watts == TRUE) %>% 
+  filter(type %in% c("Ride", "VirtualRide"),
+         device_watts == TRUE) %>% 
   mutate(year = year(start_date),
          week = isoweek(start_date),
          year = ifelse(year == 2022 & week == 52, 2021, year), 
@@ -95,14 +96,14 @@ get_zones <- function(id){
     z2_prop = z2_time / nrow(watts) * 100,
     z3_prop = z3_time / nrow(watts) * 100)
   
-  cat(paste(id, sep = "\n"))
+  cat(paste(id, "\n", sep = ""))
   
   return(watts_summary)
   
 }
 
 zone_data <- map_dfr(.x = activities$id,
-                      .f = get_zones)
+                     .f = get_zones)
 
 zone_data_summary <- activities %>% 
   left_join(zone_data, by = "id") %>% 
@@ -129,8 +130,9 @@ zone_graph <- zone_data_summary %>%
   theme_bw() + 
   xlab("") + 
   ylab("Percent") + 
-  ggtitle("Weekly Zone Distribution") + 
-  ylim(0, 80) +
+  ggtitle(label = "Weekly Zone Distribution",
+          subtitle = "FTP: 315 [Z1: 0-236, Z2: 237-331, Z3: 332+]") + 
+  ylim(0, 90) +
   theme(legend.position = "top",
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
